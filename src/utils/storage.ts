@@ -1,9 +1,34 @@
-import { Laptop, Order, ShopSettings } from '../types';
-import { INITIAL_LAPTOPS, INITIAL_ORDERS, INITIAL_SHOP_SETTINGS } from '../data/initialLaptops';
+import { Laptop, Order, ShopSettings, ShopExpense } from '../types';
+import { INITIAL_LAPTOPS, INITIAL_ORDERS, INITIAL_SHOP_SETTINGS, INITIAL_EXPENSES } from '../data/initialLaptops';
 
 const LAPTOPS_KEY = 'laptophat_inventory_v1';
 const ORDERS_KEY = 'laptophat_orders_v1';
 const SETTINGS_KEY = 'laptophat_settings_v1';
+const EXPENSES_KEY = 'laptophat_expenses_v1';
+
+export function getStoredExpenses(): ShopExpense[] {
+  try {
+    const saved = localStorage.getItem(EXPENSES_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading stored expenses:', e);
+  }
+  return INITIAL_EXPENSES;
+}
+
+export function saveStoredExpenses(expenses: ShopExpense[]): void {
+  try {
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
+  } catch (e) {
+    console.error('Error saving stored expenses:', e);
+  }
+}
+
 
 export function getStoredLaptops(): Laptop[] {
   try {

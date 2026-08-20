@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
-import { INITIAL_LAPTOPS, INITIAL_SHOP_SETTINGS } from '../src/data/initialLaptops';
-import { Laptop, Order, ShopSettings } from '../src/types';
+import { INITIAL_LAPTOPS, INITIAL_SHOP_SETTINGS, INITIAL_EXPENSES } from '../src/data/initialLaptops';
+import { Laptop, Order, ShopSettings, ShopExpense } from '../src/types';
 
 // Connection string from environment variable with user provided Neon connection string fallback
 const connectionString =
@@ -32,6 +32,7 @@ export function getDbPool(): Pool {
 // In-memory fallback in case of transient network isolation
 let inMemoryLaptops: Laptop[] = [...INITIAL_LAPTOPS];
 let inMemoryOrders: Order[] = [];
+let inMemoryExpenses: ShopExpense[] = [...INITIAL_EXPENSES];
 let inMemorySettings: ShopSettings = { ...INITIAL_SHOP_SETTINGS };
 
 export async function initDatabase(): Promise<boolean> {
@@ -56,6 +57,7 @@ export async function initDatabase(): Promise<boolean> {
         battery_backup TEXT,
         condition_grade TEXT DEFAULT 'A+',
         body_notes TEXT,
+        buying_price NUMERIC DEFAULT 0,
         price NUMERIC NOT NULL,
         original_price NUMERIC,
         stock INT DEFAULT 1,
@@ -70,6 +72,11 @@ export async function initDatabase(): Promise<boolean> {
         weight TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+    `);
+
+    // Ensure buying_price column exists if table was created previously
+    await db.query(`
+      ALTER TABLE laptops ADD COLUMN IF NOT EXISTS buying_price NUMERIC DEFAULT 0;
     `);
 
     // 2. Create Orders Table
@@ -94,7 +101,23 @@ export async function initDatabase(): Promise<boolean> {
       );
     `);
 
-    // 3. Create Shop Settings Table
+    // 3. Create Expenses Table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL,
+        amount NUMERIC NOT NULL,
+        date TEXT NOT NULL,
+        payment_method TEXT DEFAULT 'Cash',
+        voucher_number TEXT,
+        notes TEXT,
+        created_by_name TEXT DEFAULT 'Admin',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // 4. Create Shop Settings Table
     await db.query(`
       CREATE TABLE IF NOT EXISTS shop_settings (
         id INT PRIMARY KEY DEFAULT 1,
@@ -114,10 +137,10 @@ export async function initDatabase(): Promise<boolean> {
           `INSERT INTO laptops (
             id, title, brand, series, processor, generation, ram, storage,
             display, graphics, battery_health, battery_backup, condition_grade,
-            body_notes, price, original_price, stock, warranty, images,
+            body_notes, buying_price, price, original_price, stock, warranty, images,
             is_featured, is_best_seller, category, tested_checklist,
             description, ports, weight, created_at
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)
           ON CONFLICT (id) DO NOTHING`,
           [
             laptop.id,
@@ -134,6 +157,7 @@ export async function initDatabase(): Promise<boolean> {
             laptop.batteryBackup,
             laptop.conditionGrade,
             laptop.bodyNotes,
+            laptop.buyingPrice || 0,
             laptop.price,
             laptop.originalPrice,
             laptop.stock,
@@ -151,6 +175,34 @@ export async function initDatabase(): Promise<boolean> {
         );
       }
       console.log(`Seeded ${INITIAL_LAPTOPS.length} laptops into Neon.`);
+    }
+
+    // Check if expenses table is empty, if so seed initial expenses
+    const expensesCountRes = await db.query('SELECT COUNT(*) FROM expenses');
+    const expenseCount = parseInt(expensesCountRes.rows[0].count, 10);
+    if (expenseCount === 0) {
+      console.log('Seeding initial shop expenses into Neon PostgreSQL...');
+      for (const exp of INITIAL_EXPENSES) {
+        await db.query(
+          `INSERT INTO expenses (
+            id, title, category, amount, date, payment_method, voucher_number, notes, created_by_name, created_at
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          ON CONFLICT (id) DO NOTHING`,
+          [
+            exp.id,
+            exp.title,
+            exp.category,
+            exp.amount,
+            exp.date,
+            exp.paymentMethod || 'Cash',
+            exp.voucherNumber || '',
+            exp.notes || '',
+            exp.createdByName || 'Admin',
+            exp.createdAt || new Date().toISOString(),
+          ]
+        );
+      }
+      console.log(`Seeded ${INITIAL_EXPENSES.length} shop expenses into Neon.`);
     }
 
     // Check settings table
@@ -212,6 +264,7 @@ function mapRowToLaptop(row: any): Laptop {
     batteryBackup: row.battery_backup || '',
     conditionGrade: row.condition_grade || 'A+',
     bodyNotes: row.body_notes || '',
+    buyingPrice: Number(row.buying_price) || 0,
     price: Number(row.price),
     originalPrice: Number(row.original_price || row.price),
     stock: Number(row.stock),
@@ -250,6 +303,22 @@ function mapRowToOrder(row: any): Order {
   };
 }
 
+// Convert DB row to Expense model
+function mapRowToExpense(row: any): ShopExpense {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category as any,
+    amount: Number(row.amount),
+    date: row.date,
+    paymentMethod: row.payment_method || 'Cash',
+    voucherNumber: row.voucher_number || '',
+    notes: row.notes || '',
+    createdByName: row.created_by_name || 'Admin',
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
+  };
+}
+
 // ======================= LAPTOPS OPERATIONS =======================
 
 export async function getAllLaptops(): Promise<Laptop[]> {
@@ -270,10 +339,10 @@ export async function saveLaptop(laptop: Laptop): Promise<Laptop> {
       `INSERT INTO laptops (
         id, title, brand, series, processor, generation, ram, storage,
         display, graphics, battery_health, battery_backup, condition_grade,
-        body_notes, price, original_price, stock, warranty, images,
+        body_notes, buying_price, price, original_price, stock, warranty, images,
         is_featured, is_best_seller, category, tested_checklist,
         description, ports, weight, created_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         brand = EXCLUDED.brand,
@@ -288,6 +357,7 @@ export async function saveLaptop(laptop: Laptop): Promise<Laptop> {
         battery_backup = EXCLUDED.battery_backup,
         condition_grade = EXCLUDED.condition_grade,
         body_notes = EXCLUDED.body_notes,
+        buying_price = EXCLUDED.buying_price,
         price = EXCLUDED.price,
         original_price = EXCLUDED.original_price,
         stock = EXCLUDED.stock,
@@ -315,6 +385,7 @@ export async function saveLaptop(laptop: Laptop): Promise<Laptop> {
         laptop.batteryBackup,
         laptop.conditionGrade,
         laptop.bodyNotes,
+        laptop.buyingPrice || 0,
         laptop.price,
         laptop.originalPrice,
         laptop.stock,
@@ -356,6 +427,76 @@ export async function deleteLaptop(id: string): Promise<boolean> {
   } catch (err) {
     console.error('Error deleting laptop from Neon:', err);
     inMemoryLaptops = inMemoryLaptops.filter((l) => l.id !== id);
+    return true;
+  }
+}
+
+// ======================= EXPENSES OPERATIONS =======================
+
+export async function getAllExpenses(): Promise<ShopExpense[]> {
+  try {
+    const db = getDbPool();
+    const result = await db.query('SELECT * FROM expenses ORDER BY date DESC, created_at DESC');
+    return result.rows.map(mapRowToExpense);
+  } catch (err) {
+    console.error('Error fetching expenses from Neon, using memory cache:', err);
+    return inMemoryExpenses;
+  }
+}
+
+export async function saveExpense(expense: ShopExpense): Promise<ShopExpense> {
+  try {
+    const db = getDbPool();
+    await db.query(
+      `INSERT INTO expenses (
+        id, title, category, amount, date, payment_method, voucher_number, notes, created_by_name, created_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        category = EXCLUDED.category,
+        amount = EXCLUDED.amount,
+        date = EXCLUDED.date,
+        payment_method = EXCLUDED.payment_method,
+        voucher_number = EXCLUDED.voucher_number,
+        notes = EXCLUDED.notes,
+        created_by_name = EXCLUDED.created_by_name`,
+      [
+        expense.id,
+        expense.title,
+        expense.category,
+        expense.amount,
+        expense.date,
+        expense.paymentMethod || 'Cash',
+        expense.voucherNumber || '',
+        expense.notes || '',
+        expense.createdByName || 'Admin',
+        expense.createdAt || new Date().toISOString(),
+      ]
+    );
+
+    const idx = inMemoryExpenses.findIndex((e) => e.id === expense.id);
+    if (idx >= 0) inMemoryExpenses[idx] = expense;
+    else inMemoryExpenses.unshift(expense);
+
+    return expense;
+  } catch (err) {
+    console.error('Error saving expense to Neon:', err);
+    const idx = inMemoryExpenses.findIndex((e) => e.id === expense.id);
+    if (idx >= 0) inMemoryExpenses[idx] = expense;
+    else inMemoryExpenses.unshift(expense);
+    return expense;
+  }
+}
+
+export async function deleteExpense(id: string): Promise<boolean> {
+  try {
+    const db = getDbPool();
+    await db.query('DELETE FROM expenses WHERE id = $1', [id]);
+    inMemoryExpenses = inMemoryExpenses.filter((e) => e.id !== id);
+    return true;
+  } catch (err) {
+    console.error('Error deleting expense from Neon:', err);
+    inMemoryExpenses = inMemoryExpenses.filter((e) => e.id !== id);
     return true;
   }
 }

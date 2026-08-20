@@ -47,6 +47,31 @@ export interface Laptop {
 
 export type OrderStatus = 'Pending' | 'Confirmed' | 'Quality Checked' | 'Shipped' | 'Delivered' | 'Cancelled';
 
+export type ExpenseCategory =
+  | 'Shop Rent'          // দোকান ভাড়া
+  | 'Electricity Bill'   // বিদ্যুৎ বিল
+  | 'Staff Salary'       // কর্মচারীর বেতন
+  | 'Internet & WiFi'    // ইন্টারনেট ও ওয়াইফাই
+  | 'Packaging & Bags'   // বক্স ও প্যাকেজিং ব্যাগ
+  | 'Transportation'     // যাতায়াত ও ডেলিভারি খরচ
+  | 'Tea & Refreshment'  // চা ও আপ্যায়ন খরচ
+  | 'Marketing & Ads'    // অনলাইন বিজ্ঞাপন ও বুস্টিং
+  | 'Shop Maintenance'   // দোকান সংস্কার ও মেরামত
+  | 'Other';             // অন্যান্য বিবিধ খরচ
+
+export interface ShopExpense {
+  id: string;
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  date: string; // YYYY-MM-DD
+  paymentMethod: 'Cash' | 'bKash / Nagad' | 'Bank Transfer' | 'Other';
+  voucherNumber?: string;
+  notes?: string;
+  createdByName?: string;
+  createdAt: string;
+}
+
 export interface OrderItem {
   laptopId: string;
   laptopTitle: string;

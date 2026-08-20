@@ -11,6 +11,9 @@ import {
   createOrder,
   updateOrderStatus,
   trackOrder,
+  getAllExpenses,
+  saveExpense,
+  deleteExpense,
   getShopSettings,
   saveShopSettings,
   getDbConnectionStatus,
@@ -144,6 +147,55 @@ app.get('/api/orders/track', async (req, res) => {
   } catch (error: any) {
     console.error('API Error in GET /api/orders/track:', error);
     res.status(500).json({ error: 'Failed to track order' });
+  }
+});
+
+// Expenses: Fetch all (for Admin)
+app.get('/api/expenses', async (req, res) => {
+  try {
+    const expenses = await getAllExpenses();
+    res.json(expenses);
+  } catch (error: any) {
+    console.error('API Error in GET /api/expenses:', error);
+    res.status(500).json({ error: 'Failed to fetch expenses' });
+  }
+});
+
+// Expenses: Create new expense
+app.post('/api/expenses', async (req, res) => {
+  try {
+    const expense = req.body;
+    if (!expense || !expense.id || !expense.title || expense.amount === undefined) {
+      return res.status(400).json({ error: 'Missing required expense fields' });
+    }
+    const saved = await saveExpense(expense);
+    res.status(201).json(saved);
+  } catch (error: any) {
+    console.error('API Error in POST /api/expenses:', error);
+    res.status(500).json({ error: 'Failed to create expense' });
+  }
+});
+
+// Expenses: Update expense
+app.put('/api/expenses/:id', async (req, res) => {
+  try {
+    const expense = { ...req.body, id: req.params.id };
+    const saved = await saveExpense(expense);
+    res.json(saved);
+  } catch (error: any) {
+    console.error('API Error in PUT /api/expenses/:id:', error);
+    res.status(500).json({ error: 'Failed to update expense' });
+  }
+});
+
+// Expenses: Delete expense
+app.delete('/api/expenses/:id', async (req, res) => {
+  try {
+    await deleteExpense(req.params.id);
+    res.json({ success: true, id: req.params.id });
+  } catch (error: any) {
+    console.error('API Error in DELETE /api/expenses/:id:', error);
+    res.status(500).json({ error: 'Failed to delete expense' });
   }
 });
 
