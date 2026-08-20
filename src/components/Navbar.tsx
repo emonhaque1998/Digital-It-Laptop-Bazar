@@ -81,37 +81,37 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-18 gap-3 sm:gap-6">
+    <header className="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-slate-800 shadow-lg w-full max-w-full overflow-x-clip">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 w-full">
+        <div className="flex items-center justify-between h-16 sm:h-18 gap-2 sm:gap-4 md:gap-6">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink min-w-0">
             <button
               onClick={() => {
                 onSearchChange('');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex items-center gap-2.5 text-left group"
+              className="flex items-center gap-2 sm:gap-2.5 text-left group min-w-0 cursor-pointer"
               id="brand-logo-btn"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-                <LaptopIcon className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform shrink-0">
+                <LaptopIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-black text-lg sm:text-xl tracking-tight text-[#F8FAFC] uppercase">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1 sm:gap-1.5 truncate">
+                  <span className="font-black text-sm sm:text-lg md:text-xl tracking-tight text-[#F8FAFC] uppercase truncate">
                     {settings.shopName.split(' ')[0]}
                   </span>
-                  <span className="font-black text-lg sm:text-xl text-blue-400 uppercase">
+                  <span className="font-black text-sm sm:text-lg md:text-xl text-blue-400 uppercase truncate">
                     {settings.shopName.split(' ').slice(1).join(' ')}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
-                  <span className="text-blue-300 bg-blue-950/70 border border-blue-800/60 px-1.5 py-0.2 rounded font-extrabold text-[10px] uppercase tracking-wider">
-                    100% Tested Used
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-400">
+                  <span className="text-blue-300 bg-blue-950/70 border border-blue-800/60 px-1.5 py-0.2 rounded font-extrabold text-[9px] sm:text-[10px] uppercase tracking-wider shrink-0">
+                    Used Laptops
                   </span>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="hidden sm:inline font-semibold">{settings.shopNameBn}</span>
+                  <span className="hidden sm:inline text-slate-600">•</span>
+                  <span className="hidden sm:inline font-semibold text-slate-400 truncate">{settings.shopNameBn}</span>
                 </div>
               </div>
             </button>
@@ -198,26 +198,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Quick Actions & Navigation Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* AI Advisor Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
+            {/* AI Advisor Button (Desktop) */}
             <button
               id="ai-advisor-btn"
               onClick={onOpenAIAdvisor}
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 border border-blue-700/60 font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-xs group"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 border border-blue-700/60 font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-xs group cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-blue-400 group-hover:rotate-12 transition-transform" />
               <span>AI Advisor</span>
             </button>
 
-            {/* Compare Button */}
+            {/* Compare Button (Tablet & Desktop) */}
             <button
               id="compare-btn"
               onClick={onOpenComparison}
-              className="relative p-2 sm:px-3 sm:py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors"
+              className="hidden sm:inline-flex relative p-2 sm:px-3 sm:py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors cursor-pointer"
               title="Compare Laptops"
             >
               <Layers className="w-4 h-4 text-slate-400" />
-              <span className="hidden sm:inline">Compare</span>
+              <span className="hidden md:inline">Compare</span>
               {comparedLaptopIds.length > 0 && (
                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black">
                   {comparedLaptopIds.length}
@@ -225,11 +225,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* Order Tracking Button */}
+            {/* Order Tracking Button (Desktop) */}
             <button
               id="track-order-btn"
               onClick={onOpenTracking}
-              className="hidden sm:inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors"
+              className="hidden lg:inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors cursor-pointer"
               title="Track Order Status"
             >
               <Package className="w-4 h-4 text-slate-400" />
@@ -240,22 +240,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="currency-toggle-btn"
               onClick={onCurrencyToggle}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-black bg-slate-800 hover:bg-slate-700 text-[#F8FAFC] transition-colors border border-slate-700 uppercase"
+              className="px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-black bg-slate-800 hover:bg-slate-700 text-[#F8FAFC] transition-colors border border-slate-700 uppercase cursor-pointer shrink-0"
               title="Switch Currency (BDT / USD)"
             >
-              {currency === 'BDT' ? '৳ BDT' : '$ USD'}
+              {currency === 'BDT' ? '৳' : '$'}<span className="hidden sm:inline ml-0.5">{currency}</span>
             </button>
 
             {/* Cart Button */}
             <button
               id="cart-drawer-btn"
               onClick={onOpenCart}
-              className="relative flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wide shadow-md hover:shadow-blue-500/25 transition-all"
+              className="relative flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wide shadow-md hover:shadow-blue-500/25 transition-all cursor-pointer shrink-0"
             >
               <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Cart</span>
+              <span className="hidden md:inline">Cart</span>
               {cartTotalItems > 0 && (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white text-blue-900 text-[11px] font-black">
+                <span className="inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white text-blue-900 text-[10px] sm:text-[11px] font-black">
                   {cartTotalItems}
                 </span>
               )}
@@ -266,11 +266,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* Admin Portal Button */}
+            {/* Admin Portal Button (Desktop & Tablet) */}
             <button
               id="admin-dashboard-btn"
               onClick={onOpenAdmin}
-              className={`p-2 rounded-xl border flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide transition-all ${
+              className={`hidden sm:inline-flex p-2 rounded-xl border items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wide transition-all cursor-pointer shrink-0 ${
                 isAdminLoggedIn
                   ? 'bg-blue-950 text-blue-300 border-blue-600'
                   : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white'
@@ -286,29 +286,29 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="md:hidden p-2 rounded-xl bg-[#1E293B] border border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer shrink-0 flex items-center justify-center"
               aria-label="Toggle mobile menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 text-blue-400" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Search input bar */}
-        <div className="md:hidden pb-3">
-          <div className="relative">
+        <div className="md:hidden pb-2.5 pt-0.5">
+          <div className="relative w-full">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search laptops (ThinkPad, HP, Dell, MacBook)..."
-              className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#1E293B] border border-slate-700 text-[#F8FAFC] placeholder:text-slate-400 text-sm font-medium focus:bg-[#1E293B] focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              placeholder="Search laptops (ThinkPad, HP, Dell, M1)..."
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#1E293B] border border-slate-700 text-[#F8FAFC] placeholder:text-slate-400 text-xs sm:text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             {searchQuery && (
               <button
                 onClick={() => onSearchChange('')}
-                className="absolute right-2.5 top-2 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-2 text-slate-400 hover:text-white p-0.5"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -319,17 +319,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-[#0F172A] px-4 py-4 space-y-3 shadow-2xl">
+        <div className="md:hidden border-t border-slate-800 bg-[#0F172A] px-4 py-4 space-y-2.5 shadow-2xl animate-in slide-in-from-top-2 duration-150">
           <button
             onClick={() => {
               onOpenAIAdvisor();
               setMobileMenuOpen(false);
             }}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-blue-950/60 border border-blue-700/60 text-blue-200 font-bold text-sm uppercase tracking-wide"
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-blue-950/60 border border-blue-700/60 text-blue-200 font-black text-xs uppercase tracking-wide cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <span>AI Laptop Smart Advisor</span>
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span>AI Laptop Matcher</span>
             </div>
             <ArrowRight className="w-4 h-4 text-blue-400" />
           </button>
@@ -339,11 +339,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onOpenTracking();
               setMobileMenuOpen(false);
             }}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-[#1E293B] border border-slate-700 text-slate-200 font-bold text-sm uppercase tracking-wide"
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-[#1E293B] border border-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wide cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-slate-400" />
-              <span>Track Your Order Status</span>
+              <Package className="w-4 h-4 text-cyan-400" />
+              <span>Track Order Status</span>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-400" />
           </button>
@@ -353,13 +353,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               onOpenComparison();
               setMobileMenuOpen(false);
             }}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-[#1E293B] border border-slate-700 text-slate-200 font-bold text-sm uppercase tracking-wide"
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-[#1E293B] border border-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wide cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-slate-400" />
+              <Layers className="w-4 h-4 text-purple-400" />
               <span>Compare Laptops ({comparedLaptopIds.length})</span>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-400" />
+          </button>
+
+          <button
+            onClick={() => {
+              onOpenAdmin();
+              setMobileMenuOpen(false);
+            }}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs uppercase tracking-wide cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>Admin Management Dashboard {isAdminLoggedIn && '• Logged In'}</span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-amber-400" />
           </button>
 
           <div className="pt-2 flex items-center gap-2">
@@ -367,17 +381,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(settings.shopName)},%20I%20am%20interested%20in%20buying%20a%20used%20laptop`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-sm font-extrabold uppercase tracking-wide shadow-xs"
+              className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wide shadow-xs"
             >
               <MessageSquare className="w-4 h-4" />
               <span>WhatsApp Chat</span>
             </a>
             <a
               href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`}
-              className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center gap-1.5 text-sm font-extrabold uppercase tracking-wide border border-slate-700"
+              className="py-2.5 px-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wide border border-slate-700"
             >
               <Phone className="w-4 h-4 text-blue-400" />
-              <span>Call Hotline</span>
+              <span>Call</span>
             </a>
           </div>
         </div>
