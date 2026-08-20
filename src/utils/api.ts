@@ -1,5 +1,14 @@
-import { Laptop, Order, ShopSettings } from '../types';
-import { getStoredLaptops, saveStoredLaptops, getStoredOrders, saveStoredOrders, getStoredSettings, saveStoredSettings } from './storage';
+import { Laptop, Order, ShopSettings, ShopExpense } from '../types';
+import {
+  getStoredLaptops,
+  saveStoredLaptops,
+  getStoredOrders,
+  saveStoredOrders,
+  getStoredSettings,
+  saveStoredSettings,
+  getStoredExpenses,
+  saveStoredExpenses,
+} from './storage';
 
 export interface DbStatus {
   connected: boolean;
