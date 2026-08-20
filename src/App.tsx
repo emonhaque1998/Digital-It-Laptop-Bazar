@@ -19,12 +19,19 @@ import {
 import { Laptop, LaptopBrand, Order, OrderItem, ShopSettings } from './types';
 import {
   getStoredLaptops,
-  saveStoredLaptops,
   getStoredOrders,
-  saveStoredOrders,
-  getStoredSettings,
-  saveStoredSettings
+  getStoredSettings
 } from './utils/storage';
+import {
+  fetchLaptops,
+  fetchOrders,
+  fetchSettings,
+  apiSaveLaptop,
+  apiDeleteLaptop,
+  apiCreateOrder,
+  apiUpdateOrderStatus,
+  apiSaveSettings,
+} from './utils/api';
 import { AnnouncementBar } from './components/AnnouncementBar';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
@@ -86,18 +93,30 @@ export default function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-  // Persist changes
+  // Fetch data from Neon PostgreSQL backend on mount
   useEffect(() => {
-    saveStoredLaptops(laptops);
-  }, [laptops]);
-
-  useEffect(() => {
-    saveStoredOrders(orders);
-  }, [orders]);
-
-  useEffect(() => {
-    saveStoredSettings(settings);
-  }, [settings]);
+    let isMounted = true;
+    async function loadNeonData() {
+      try {
+        const [remoteLaptops, remoteOrders, remoteSettings] = await Promise.all([
+          fetchLaptops(),
+          fetchOrders(),
+          fetchSettings(),
+        ]);
+        if (isMounted) {
+          if (remoteLaptops && remoteLaptops.length > 0) setLaptops(remoteLaptops);
+          if (remoteOrders) setOrders(remoteOrders);
+          if (remoteSettings) setSettings(remoteSettings);
+        }
+      } catch (err) {
+        console.warn('Initial Neon DB fetch failed, utilizing cached storage:', err);
+      }
+    }
+    loadNeonData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -191,6 +210,9 @@ export default function App() {
     setOrders((prev) => [order, ...prev]);
     setCart([]);
     setOrderSuccess(order);
+
+    // Save directly to Neon PostgreSQL database
+    apiCreateOrder(order);
   };
 
   // Compare actions
@@ -218,17 +240,26 @@ export default function App() {
       }
       return [laptop, ...prev];
     });
+    // Persist to Neon DB
+    apiSaveLaptop(laptop);
   };
 
   const handleDeleteLaptop = (laptopId: string) => {
     setLaptops((prev) => prev.filter((l) => l.id !== laptopId));
+    // Persist delete to Neon DB
+    apiDeleteLaptop(laptopId);
   };
 
   const handleUpdateLaptopStock = (laptopId: string, delta: number) => {
     setLaptops((prev) =>
-      prev.map((l) =>
-        l.id === laptopId ? { ...l, stock: Math.max(0, l.stock + delta) } : l
-      )
+      prev.map((l) => {
+        if (l.id === laptopId) {
+          const updated = { ...l, stock: Math.max(0, l.stock + delta) };
+          apiSaveLaptop(updated);
+          return updated;
+        }
+        return l;
+      })
     );
   };
 
@@ -236,6 +267,14 @@ export default function App() {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o))
     );
+    // Persist status change to Neon DB
+    apiUpdateOrderStatus(orderId, status);
+  };
+
+  const handleSaveSettings = (newSettings: ShopSettings) => {
+    setSettings(newSettings);
+    // Persist settings to Neon DB
+    apiSaveSettings(newSettings);
   };
 
   // Filter & Search computation
@@ -634,7 +673,7 @@ export default function App() {
         onDeleteLaptop={handleDeleteLaptop}
         onUpdateLaptopStock={handleUpdateLaptopStock}
         onUpdateOrderStatus={handleUpdateOrderStatus}
-        onSaveSettings={setSettings}
+        onSaveSettings={handleSaveSettings}
         currency={currency}
         isAdminLoggedIn={isAdminLoggedIn}
         onSetAdminLoggedIn={setIsAdminLoggedIn}

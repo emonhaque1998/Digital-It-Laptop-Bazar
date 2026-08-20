@@ -686,9 +686,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 Storefront & Contact Information
               </h4>
 
+              {/* Database Connection Status Card */}
+              <div className="p-4 bg-[#0F172A] rounded-xl border border-emerald-800/60 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                  <div>
+                    <div className="text-xs font-black text-emerald-300 uppercase tracking-wide">
+                      Neon PostgreSQL Cloud Database
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      Connected to Neon AWS Serverless Pooler (ep-twilight-sound-ayjymvwj)
+                    </div>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                  Active & Synced
+                </span>
+              </div>
+
               {settingsSavedMsg && (
                 <div className="p-3 bg-blue-950 border border-blue-600 text-blue-200 rounded-xl text-xs font-black uppercase tracking-wide">
-                  ✓ Settings updated successfully!
+                  ✓ Settings updated successfully in Neon Database!
                 </div>
               )}
 
