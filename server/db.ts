@@ -161,6 +161,19 @@ export async function initDatabase(): Promise<boolean> {
         [JSON.stringify(INITIAL_SHOP_SETTINGS)]
       );
       console.log('Seeded initial shop settings into Neon.');
+    } else {
+      const current = typeof settingsRes.rows[0].settings === 'string'
+        ? JSON.parse(settingsRes.rows[0].settings)
+        : settingsRes.rows[0].settings;
+      if (current.phone?.includes('1711-234567') || current.whatsapp?.includes('1711234567')) {
+        current.phone = '+880 1864-176956';
+        current.whatsapp = '+8801864176956';
+        await db.query(
+          'UPDATE shop_settings SET settings = $1, updated_at = NOW() WHERE id = 1',
+          [JSON.stringify(current)]
+        );
+        console.log('Updated Neon shop settings contact numbers to 01864176956');
+      }
     }
 
     isDbConnected = true;

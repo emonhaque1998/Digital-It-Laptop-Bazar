@@ -60,8 +60,14 @@ export function getStoredSettings(): ShopSettings {
         if (parsed.shopName === 'Digital IT Laptop Bazaar' || parsed.shopName === 'LaptopHat') {
           parsed.shopName = 'Laptop BAZAR';
           parsed.shopNameBn = 'ল্যাপটপ বাজার';
-          saveStoredSettings(parsed);
         }
+        if (!parsed.phone || parsed.phone.includes('1711-234567')) {
+          parsed.phone = '+880 1864-176956';
+        }
+        if (!parsed.whatsapp || parsed.whatsapp.includes('1711234567')) {
+          parsed.whatsapp = '+8801864176956';
+        }
+        saveStoredSettings(parsed);
         return parsed;
       }
     }
