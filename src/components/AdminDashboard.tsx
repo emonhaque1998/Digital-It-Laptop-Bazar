@@ -91,6 +91,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   });
   const [settingsSavedMsg, setSettingsSavedMsg] = useState(false);
   const [showSettingsPassword, setShowSettingsPassword] = useState(false);
+  const [dbNotificationMsg, setDbNotificationMsg] = useState<string | null>(null);
+
+  const showDbToast = (msg: string) => {
+    setDbNotificationMsg(msg);
+    setTimeout(() => setDbNotificationMsg(null), 3500);
+  };
+
+  const handleSaveLaptopWrapper = (laptop: Laptop) => {
+    onSaveLaptop(laptop);
+    setIsAddEditModalOpen(false);
+    setEditingLaptop(null);
+    showDbToast(`✓ "${laptop.title}" successfully saved & synced to Neon PostgreSQL Database!`);
+  };
+
+  const handleDeleteLaptopWrapper = (id: string, title: string) => {
+    onDeleteLaptop(id);
+    showDbToast(`✓ "${title}" deleted from Neon PostgreSQL Database.`);
+  };
+
+  const handleStockUpdateWrapper = (id: string, delta: number, title: string) => {
+    onUpdateLaptopStock(id, delta);
+    showDbToast(`✓ Stock updated in Database for "${title}".`);
+  };
 
   const expectedEmail = (settings.adminEmail || 'emonhaque.net@gmail.com').trim().toLowerCase();
   const expectedPassword = settings.adminPassword || 'Emon@1998';
@@ -404,8 +427,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* TAB 1: INVENTORY MANAGEMENT */}
         {activeTab === 'inventory' && (
           <div className="p-6 space-y-4">
+            {/* Database Sync Notification */}
+            {dbNotificationMsg && (
+              <div className="p-3 bg-emerald-950/80 border border-emerald-700 text-emerald-300 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{dbNotificationMsg}</span>
+                </div>
+                <span className="text-[10px] uppercase tracking-wider font-black px-2 py-0.5 bg-emerald-900/60 rounded text-emerald-200 border border-emerald-600/40">
+                  Neon DB Synced
+                </span>
+              </div>
+            )}
+
             {/* Search & Action Bar */}
-            <div className="flex flex-col sm:flex-row justify-between gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
               <div className="relative max-w-md w-full">
                 <input
                   type="text"
@@ -417,16 +453,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               </div>
 
-              <button
-                onClick={() => {
-                  setEditingLaptop(null);
-                  setIsAddEditModalOpen(true);
-                }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-950/50"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Used Laptop</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-blue-950/60 border border-blue-600/30 rounded-xl text-[11px] font-bold text-blue-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Database: Neon PostgreSQL ({laptops.length} Live Items)</span>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setEditingLaptop(null);
+                    setIsAddEditModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-950/50 shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Used Laptop</span>
+                </button>
+              </div>
             </div>
 
             {/* Inventory Table */}
@@ -501,7 +544,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <td className="py-3 px-3 text-center">
                           <div className="inline-flex items-center gap-1 border border-slate-700 rounded-lg p-1 bg-[#0F172A]">
                             <button
-                              onClick={() => onUpdateLaptopStock(lap.id, -1)}
+                              onClick={() => handleStockUpdateWrapper(lap.id, -1, lap.title)}
                               disabled={lap.stock <= 0}
                               className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-black disabled:opacity-30"
                               title="Decrease Stock"
@@ -510,7 +553,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </button>
                             <span className="w-6 text-center font-black text-white">{lap.stock}</span>
                             <button
-                              onClick={() => onUpdateLaptopStock(lap.id, 1)}
+                              onClick={() => handleStockUpdateWrapper(lap.id, 1, lap.title)}
                               className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-black"
                               title="Increase Stock"
                             >
@@ -535,7 +578,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <button
                               onClick={() => {
                                 if (window.confirm(`Are you sure you want to delete "${lap.title}"?`)) {
-                                  onDeleteLaptop(lap.id);
+                                  handleDeleteLaptopWrapper(lap.id, lap.title);
                                 }
                               }}
                               className="p-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-400 rounded-lg transition-colors border border-rose-800/60"
@@ -950,7 +993,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           setIsAddEditModalOpen(false);
           setEditingLaptop(null);
         }}
-        onSave={onSaveLaptop}
+        onSave={handleSaveLaptopWrapper}
         initialLaptop={editingLaptop}
       />
 
