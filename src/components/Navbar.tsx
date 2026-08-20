@@ -364,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <div className="pt-2 flex items-center gap-2">
             <a
-              href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20LaptopHat,%20I%20am%20interested%20in%20buying%20a%20used%20laptop`}
+              href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(settings.shopName)},%20I%20am%20interested%20in%20buying%20a%20used%20laptop`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-sm font-extrabold uppercase tracking-wide shadow-xs"

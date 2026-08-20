@@ -1,6 +1,6 @@
 {
-  "name": "LaptopHat - Used Laptop Store & Admin",
-  "description": "Used laptop e-commerce store with rich catalog, purchase/checkout system, order tracking, and full admin dashboard to upload and manage laptop inventory.",
+  "name": "Laptop BAZAR - Used Laptop Store & Admin",
+  "description": "Laptop BAZAR used laptop e-commerce store with rich catalog, purchase/checkout system, order tracking, and full admin dashboard.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

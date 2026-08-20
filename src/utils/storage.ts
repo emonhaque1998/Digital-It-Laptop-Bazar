@@ -57,6 +57,11 @@ export function getStoredSettings(): ShopSettings {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && parsed.shopName) {
+        if (parsed.shopName === 'Digital IT Laptop Bazaar' || parsed.shopName === 'LaptopHat') {
+          parsed.shopName = 'Laptop BAZAR';
+          parsed.shopNameBn = 'ল্যাপটপ বাজার';
+          saveStoredSettings(parsed);
+        }
         return parsed;
       }
     }

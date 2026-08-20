@@ -1,8 +1,8 @@
 import { Laptop, ShopSettings } from '../types';
 
 export const INITIAL_SHOP_SETTINGS: ShopSettings = {
-  shopName: 'Digital IT Laptop Bazaar',
-  shopNameBn: 'ডিজিটাল আইটি ল্যাপটপ বাজার',
+  shopName: 'Laptop BAZAR',
+  shopNameBn: 'ল্যাপটপ বাজার',
   tagline: '100% Original Used & Refurbished Laptops with 15 Days Replacement & 2 Years Warranty',
   phone: '+880 1711-234567',
   whatsapp: '+8801711234567',

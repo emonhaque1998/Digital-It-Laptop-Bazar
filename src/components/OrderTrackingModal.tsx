@@ -200,7 +200,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
             <div className="pt-2 flex items-center justify-between text-xs text-slate-400 font-medium">
               <span>Need quick assistance?</span>
               <a
-                href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20LaptopHat,%20inquiring%20about%20my%20Order%20${matchedOrder.id}`}
+                href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(settings.shopName)},%20inquiring%20about%20my%20Order%20${matchedOrder.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-black uppercase tracking-wide text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
