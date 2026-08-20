@@ -9,7 +9,12 @@ import {
   Image as ImageIcon,
   HelpCircle,
   Zap,
-  RotateCcw
+  RotateCcw,
+  Lock,
+  Eye,
+  EyeOff,
+  TrendingUp,
+  ShieldCheck
 } from 'lucide-react';
 import { ConditionGrade, Laptop, LaptopBrand, LaptopCategory } from '../types';
 
@@ -43,6 +48,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
   const [batteryBackup, setBatteryBackup] = useState(initialLaptop?.batteryBackup || '4 to 5 Hours');
   const [conditionGrade, setConditionGrade] = useState<ConditionGrade>(initialLaptop?.conditionGrade || 'A+');
   const [bodyNotes, setBodyNotes] = useState(initialLaptop?.bodyNotes || 'Pristine cosmetic condition, zero scratches on screen, original charger included.');
+  const [buyingPrice, setBuyingPrice] = useState<number>(initialLaptop?.buyingPrice || 22000);
   const [price, setPrice] = useState(initialLaptop?.price || 28000);
   const [originalPrice, setOriginalPrice] = useState(initialLaptop?.originalPrice || 33000);
   const [stock, setStock] = useState(initialLaptop?.stock || 3);
@@ -57,6 +63,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
   );
   const [newImageUrl, setNewImageUrl] = useState('');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [showBuyingPriceInModal, setShowBuyingPriceInModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   // Handle template pre-filling
@@ -74,6 +81,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
       setBatteryHealth(94);
       setBatteryBackup('4.5 to 5.5 Hours (Dual Battery)');
       setConditionGrade('A+');
+      setBuyingPrice(22000);
       setPrice(28500);
       setOriginalPrice(34000);
       setCategory('Business');
@@ -95,6 +103,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
       setBatteryHealth(92);
       setBatteryBackup('10 to 12 Hours');
       setConditionGrade('A+');
+      setBuyingPrice(56000);
       setPrice(68000);
       setOriginalPrice(78000);
       setCategory('MacBook');
@@ -116,6 +125,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
       setBatteryHealth(89);
       setBatteryBackup('3.5 to 4.5 Hours');
       setConditionGrade('A');
+      setBuyingPrice(26500);
       setPrice(33500);
       setOriginalPrice(39000);
       setCategory('Business');
@@ -136,6 +146,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
       setBatteryHealth(88);
       setBatteryBackup('3.5 to 4 Hours');
       setConditionGrade('A');
+      setBuyingPrice(19500);
       setPrice(24500);
       setOriginalPrice(29000);
       setCategory('Budget Student');
@@ -233,6 +244,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
       batteryBackup: batteryBackup.trim(),
       conditionGrade,
       bodyNotes: bodyNotes.trim(),
+      buyingPrice: Number(buyingPrice) || 0,
       price: Number(price),
       originalPrice: Number(originalPrice) || Number(price),
       stock: Number(stock) || 1,
@@ -471,14 +483,14 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
             </div>
           </div>
 
-          {/* Condition, Battery, Price & Stock */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Condition, Battery & Stock */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">Condition Grade</label>
               <select
                 value={conditionGrade}
                 onChange={(e) => setConditionGrade(e.target.value as any)}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-cyan-300"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-cyan-300"
               >
                 <option value="A+">Grade A+ (Like New 99%)</option>
                 <option value="A">Grade A (Pristine 95%)</option>
@@ -494,20 +506,7 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
                 max="100"
                 value={batteryHealth}
                 onChange={(e) => setBatteryHealth(Number(e.target.value))}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">
-                Selling Price (BDT ৳) <span className="text-cyan-400">*</span>
-              </label>
-              <input
-                type="number"
-                required
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-blue-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-white"
               />
             </div>
 
@@ -518,9 +517,111 @@ export const AdminAddEditLaptopModal: React.FC<AdminAddEditLaptopModalProps> = (
                 min="0"
                 value={stock}
                 onChange={(e) => setStock(Number(e.target.value))}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-[#1E293B] text-xs font-black text-white"
               />
             </div>
+          </div>
+
+          {/* Pricing & Secret Admin Buying Cost Section */}
+          <div className="p-4 bg-gradient-to-br from-[#1E293B] to-[#0F172A] rounded-2xl border border-slate-700/80 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                  Pricing & Confidential Admin Cost
+                </span>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 bg-emerald-950/80 text-emerald-300 rounded-full border border-emerald-800/60 flex items-center gap-1">
+                <Lock className="w-2.5 h-2.5" />
+                Buying Price is 100% Secret
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Public Selling Price */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                  Public Selling Price (৳) <span className="text-cyan-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-blue-500/60 bg-[#0F172A] text-sm font-black text-blue-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Customer pays this amount</span>
+              </div>
+
+              {/* Public Strike/Original Price */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                  Strike Price / MRP (৳)
+                </label>
+                <input
+                  type="number"
+                  value={originalPrice}
+                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-[#0F172A] text-sm font-bold text-slate-300"
+                />
+                <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Shown crossed-out as discount</span>
+              </div>
+
+              {/* Secret Admin Buying Price (ক্রয়মূল্য / কেনা দাম) */}
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-amber-400" />
+                    <span>Secret Buying Price (৳)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowBuyingPriceInModal(!showBuyingPriceInModal)}
+                    className="text-[10px] font-extrabold text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                    title={showBuyingPriceInModal ? 'Hide secret price' : 'Reveal secret price'}
+                  >
+                    {showBuyingPriceInModal ? <EyeOff className="w-3 h-3 text-amber-400" /> : <Eye className="w-3 h-3 text-slate-400" />}
+                    <span>{showBuyingPriceInModal ? 'Hide' : 'Reveal'}</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type={showBuyingPriceInModal ? 'number' : 'password'}
+                    value={buyingPrice}
+                    onChange={(e) => setBuyingPrice(Number(e.target.value))}
+                    placeholder="e.g. 22000"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-amber-600/50 bg-[#0F172A] text-sm font-black text-amber-300 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                  />
+                  <div className="absolute right-3 top-3 text-amber-500/80 pointer-events-none">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                </div>
+                <span className="text-[10px] text-amber-400/90 font-bold mt-1 block">
+                  🔒 Confidential: Never visible to customers
+                </span>
+              </div>
+            </div>
+
+            {/* Profit Margin Calculation Card */}
+            {price > 0 && buyingPrice > 0 && (
+              <div className="p-3 bg-emerald-950/40 border border-emerald-800/50 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="text-slate-300 font-bold">Estimated Profit per unit:</span>
+                  <span className={`font-black ${price - buyingPrice >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {price - buyingPrice >= 0 ? '+' : ''}৳ {(price - buyingPrice).toLocaleString('en-US')}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400 font-semibold">Profit Margin:</span>
+                  <span className="px-2 py-0.5 bg-emerald-900/60 text-emerald-300 font-black rounded-md border border-emerald-700/50">
+                    {Math.round(((price - buyingPrice) / price) * 100)}%
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Physical Body Notes & Warranty */}

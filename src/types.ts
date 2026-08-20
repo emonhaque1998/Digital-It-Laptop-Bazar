@@ -29,6 +29,7 @@ export interface Laptop {
   batteryBackup: string; // e.g. "4-5 Hours"
   conditionGrade: ConditionGrade;
   bodyNotes: string;
+  buyingPrice?: number; // Secret admin cost price (never shown to customers)
   price: number; // in BDT (primary) or USD
   originalPrice: number;
   stock: number;

@@ -93,6 +93,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showSettingsPassword, setShowSettingsPassword] = useState(false);
   const [dbNotificationMsg, setDbNotificationMsg] = useState<string | null>(null);
 
+  // Shop Counter Privacy Shield: Keeps buying prices and profit margins confidential when customers stand near screen
+  const [isCounterPrivacyMode, setIsCounterPrivacyMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('laptop_bazar_counter_privacy');
+    return saved !== null ? saved === 'true' : true; // default privacy ON for counter safety
+  });
+  const [revealedRowIds, setRevealedRowIds] = useState<Set<string>>(new Set());
+
+  const toggleCounterPrivacyMode = () => {
+    setIsCounterPrivacyMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('laptop_bazar_counter_privacy', String(next));
+      return next;
+    });
+  };
+
+  const toggleRowReveal = (id: string) => {
+    setRevealedRowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const showDbToast = (msg: string) => {
     setDbNotificationMsg(msg);
     setTimeout(() => setDbNotificationMsg(null), 3500);
@@ -142,8 +169,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setLoginError(null);
   };
 
-  // Analytics Metrics
+  // Analytics & Financial Metrics
   const totalInventoryValue = laptops.reduce((acc, l) => acc + l.price * l.stock, 0);
+  const totalInventoryCost = laptops.reduce((acc, l) => acc + (l.buyingPrice || 0) * l.stock, 0);
+  const totalPotentialProfit = totalInventoryValue - totalInventoryCost;
   const totalStockUnits = laptops.reduce((acc, l) => acc + l.stock, 0);
   const totalOrdersCount = orders.length;
   const pendingOrdersCount = orders.filter(o => o.status === 'Pending' || o.status === 'Quality Checked').length;
@@ -324,6 +353,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Counter Safe Mode Privacy Shield Toggle */}
+            <button
+              type="button"
+              onClick={toggleCounterPrivacyMode}
+              className={`px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border ${
+                isCounterPrivacyMode
+                  ? 'bg-emerald-950/80 hover:bg-emerald-900 border-emerald-700 text-emerald-300 shadow-md shadow-emerald-950/50'
+                  : 'bg-amber-950/80 hover:bg-amber-900 border-amber-700 text-amber-300 shadow-md shadow-amber-950/50'
+              }`}
+              title={
+                isCounterPrivacyMode
+                  ? 'Counter Privacy ON: Secret buying price & profit are masked. Click to reveal.'
+                  : 'Counter Privacy OFF: Secret buying price & profit are visible. Click to hide.'
+              }
+            >
+              {isCounterPrivacyMode ? (
+                <>
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span className="hidden md:inline">Counter Shield:</span>
+                  <span className="text-emerald-400">ON (Secret)</span>
+                  <EyeOff className="w-3 h-3 text-emerald-400" />
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 text-amber-400" />
+                  <span className="hidden md:inline">Counter Shield:</span>
+                  <span className="text-amber-400">OFF (Visible)</span>
+                  <Lock className="w-3 h-3 text-amber-400" />
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => {
                 setEditingLaptop(null);
@@ -332,7 +393,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide flex items-center gap-1.5 shadow-xl shadow-blue-950/50 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Upload Laptop (নতুন ল্যাপটপ)</span>
+              <span>Upload Laptop</span>
             </button>
 
             <button
@@ -355,9 +416,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Top Analytics KPI Bar */}
         <div className="p-4 sm:p-6 bg-[#0F172A] border-b border-slate-800 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Selling Value */}
           <div className="p-4 bg-[#1E293B] border border-slate-800 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 text-xs font-black uppercase tracking-wider">
-              <span>Inventory Value</span>
+              <span>Selling Value (বিক্রয়)</span>
               <DollarSign className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="text-xl sm:text-2xl font-black text-[#F8FAFC] mt-1">
@@ -366,39 +428,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="text-[11px] text-slate-400 mt-0.5 font-medium">{totalStockUnits} Units In-Stock</div>
           </div>
 
+          {/* Secret Buying Cost Investment */}
+          <div className="p-4 bg-[#1E293B] border border-slate-800 rounded-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between text-slate-400 text-xs font-black uppercase tracking-wider">
+              <span className="flex items-center gap-1 text-amber-300">
+                <Lock className="w-3 h-3 text-amber-400" />
+                Buying Cost (কেনা দাম)
+              </span>
+              <button
+                type="button"
+                onClick={toggleCounterPrivacyMode}
+                className="text-slate-400 hover:text-amber-300 transition-colors"
+                title="Toggle Counter Privacy Mode"
+              >
+                {isCounterPrivacyMode ? <EyeOff className="w-3.5 h-3.5 text-emerald-400" /> : <Eye className="w-3.5 h-3.5 text-amber-400" />}
+              </button>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1 font-mono tracking-tight">
+              {isCounterPrivacyMode ? '••••••••' : formatPrice(totalInventoryCost, currency, settings.bdtToUsdRate)}
+            </div>
+            <div className="text-[11px] text-slate-400 mt-0.5 font-medium">
+              {isCounterPrivacyMode ? '🔒 Masked on counter' : 'Total Capital Investment'}
+            </div>
+          </div>
+
+          {/* Secret Potential Profit */}
+          <div className="p-4 bg-[#1E293B] border border-slate-800 rounded-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between text-slate-400 text-xs font-black uppercase tracking-wider">
+              <span className="flex items-center gap-1 text-emerald-300">
+                <TrendingUp className="w-3 h-3 text-emerald-400" />
+                Est. Net Profit (নিট লাভ)
+              </span>
+              <button
+                type="button"
+                onClick={toggleCounterPrivacyMode}
+                className="text-slate-400 hover:text-emerald-300 transition-colors"
+                title="Toggle Counter Privacy Mode"
+              >
+                {isCounterPrivacyMode ? <EyeOff className="w-3.5 h-3.5 text-emerald-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-400" />}
+              </button>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-1 font-mono tracking-tight">
+              {isCounterPrivacyMode ? '••••••••' : `+${formatPrice(totalPotentialProfit, currency, settings.bdtToUsdRate)}`}
+            </div>
+            <div className="text-[11px] text-emerald-400/90 font-bold mt-0.5">
+              {isCounterPrivacyMode
+                ? '🔒 Masked for customer privacy'
+                : `${Math.round((totalPotentialProfit / (totalInventoryValue || 1)) * 100)}% Gross Margin`}
+            </div>
+          </div>
+
+          {/* Orders / Pending */}
           <div className="p-4 bg-[#1E293B] border border-slate-800 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 text-xs font-black uppercase tracking-wider">
-              <span>Total Orders</span>
+              <span>Orders & Volume</span>
               <ShoppingCart className="w-4 h-4 text-blue-400" />
             </div>
             <div className="text-xl sm:text-2xl font-black text-[#F8FAFC] mt-1">
               {totalOrdersCount} Orders
             </div>
             <div className="text-[11px] text-cyan-400 font-bold mt-0.5">
-              {formatPrice(totalRevenue, currency, settings.bdtToUsdRate)} Total Volume
+              {pendingOrdersCount} Pending Actions
             </div>
-          </div>
-
-          <div className="p-4 bg-[#1E293B] border border-slate-800 rounded-2xl">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-black uppercase tracking-wider">
-              <span>Pending Deliveries</span>
-              <Clock className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-[#F8FAFC] mt-1">
-              {pendingOrdersCount}
-            </div>
-            <div className="text-[11px] text-amber-400 font-bold mt-0.5">Requires Action</div>
-          </div>
-
-          <div className="p-4 bg-[#1E293B] border border-slate-800 rounded-2xl">
-            <div className="flex items-center justify-between text-slate-400 text-xs font-black uppercase tracking-wider">
-              <span>Active Models</span>
-              <Package className="w-4 h-4 text-purple-400" />
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-[#F8FAFC] mt-1">
-              {laptops.length} Models
-            </div>
-            <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Grade A+ / A Catalog</div>
           </div>
         </div>
 
@@ -448,16 +539,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search inventory by title, brand, processor..."
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#1E293B] border border-slate-700 text-white text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#1E293B] border border-slate-700 text-white text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-blue-950/60 border border-blue-600/30 rounded-xl text-[11px] font-bold text-blue-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Database: Neon PostgreSQL ({laptops.length} Live Items)</span>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Privacy Badge / Switcher */}
+                <button
+                  type="button"
+                  onClick={toggleCounterPrivacyMode}
+                  className={`px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border ${
+                    isCounterPrivacyMode
+                      ? 'bg-emerald-950/60 hover:bg-emerald-900 border-emerald-700/80 text-emerald-300'
+                      : 'bg-amber-950/60 hover:bg-amber-900 border-amber-700/80 text-amber-300'
+                  }`}
+                  title="Toggle Counter Safe Privacy Shield"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{isCounterPrivacyMode ? 'Secret Prices: MASKED (Safe)' : 'Secret Prices: REVEALED'}</span>
+                </button>
 
                 <button
                   onClick={() => {
@@ -467,7 +568,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-950/50 shrink-0"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Used Laptop</span>
+                  <span>Add Laptop (ল্যাপটপ যোগ)</span>
                 </button>
               </div>
             </div>
@@ -478,118 +579,184 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-slate-400 font-black uppercase tracking-wider text-[11px] border-b border-slate-800">
                     <tr>
-                      <th className="py-3 px-4">Laptop Item</th>
-                      <th className="py-3 px-3">Specs (CPU / RAM / SSD)</th>
-                      <th className="py-3 px-3">Condition</th>
-                      <th className="py-3 px-3">Battery</th>
-                      <th className="py-3 px-3">Price</th>
-                      <th className="py-3 px-3 text-center">Stock</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                      <th className="py-3.5 px-4">Laptop Item</th>
+                      <th className="py-3.5 px-3">Specs (CPU / RAM / SSD)</th>
+                      <th className="py-3.5 px-3">Condition</th>
+                      <th className="py-3.5 px-3">Battery</th>
+                      <th className="py-3.5 px-3">Selling Price (বিক্রয়)</th>
+                      <th className="py-3.5 px-3">
+                        <span className="flex items-center gap-1 text-amber-300">
+                          <Lock className="w-3 h-3 text-amber-400" />
+                          <span>Secret Cost (কেনা দাম)</span>
+                        </span>
+                      </th>
+                      <th className="py-3.5 px-3">
+                        <span className="flex items-center gap-1 text-emerald-300">
+                          <TrendingUp className="w-3 h-3 text-emerald-400" />
+                          <span>Est. Profit (লাভ)</span>
+                        </span>
+                      </th>
+                      <th className="py-3.5 px-3 text-center">Stock</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
-                    {filteredLaptops.map((lap) => (
-                      <tr key={lap.id} className="hover:bg-slate-800/60 transition-colors">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={lap.images[0]}
-                              alt=""
-                              referrerPolicy="no-referrer"
-                              className="w-12 h-12 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0"
-                            />
-                            <div className="min-w-0 max-w-xs">
-                              <div className="font-extrabold text-[#F8FAFC] truncate">{lap.title}</div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                {lap.brand} • {lap.category}
-                              </span>
+                    {filteredLaptops.map((lap) => {
+                      const cost = lap.buyingPrice || 0;
+                      const profit = lap.price - cost;
+                      const marginPct = lap.price > 0 ? Math.round((profit / lap.price) * 100) : 0;
+                      const isRevealed = !isCounterPrivacyMode || revealedRowIds.has(lap.id);
+
+                      return (
+                        <tr key={lap.id} className="hover:bg-slate-800/60 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={lap.images[0]}
+                                alt=""
+                                referrerPolicy="no-referrer"
+                                className="w-12 h-12 rounded-lg object-cover bg-slate-900 border border-slate-700 shrink-0"
+                              />
+                              <div className="min-w-0 max-w-xs">
+                                <div className="font-extrabold text-[#F8FAFC] truncate">{lap.title}</div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                  {lap.brand} • {lap.category}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="py-3 px-3 text-slate-300">
-                          <div className="font-bold text-white truncate max-w-[180px]">
-                            {lap.processor}
-                          </div>
-                          <div className="text-[11px] text-slate-400 font-medium">
-                            {lap.ram} | {lap.storage}
-                          </div>
-                        </td>
+                          <td className="py-3 px-3 text-slate-300">
+                            <div className="font-bold text-white truncate max-w-[180px]">
+                              {lap.processor}
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-medium">
+                              {lap.ram} | {lap.storage}
+                            </div>
+                          </td>
 
-                        <td className="py-3 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                              lap.conditionGrade === 'A+'
-                                ? 'bg-cyan-950 text-cyan-300 border border-cyan-800'
-                                : lap.conditionGrade === 'A'
-                                ? 'bg-blue-950 text-blue-300 border border-blue-800'
-                                : 'bg-amber-950 text-amber-300 border border-amber-800'
-                            }`}
-                          >
-                            Grade {lap.conditionGrade}
-                          </span>
-                        </td>
-
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-1 font-black text-cyan-400">
-                            <BatteryMedium className="w-3.5 h-3.5" />
-                            <span>{lap.batteryHealth}%</span>
-                          </div>
-                        </td>
-
-                        <td className="py-3 px-3 font-black text-blue-400 text-sm">
-                          {formatPrice(lap.price, currency, settings.bdtToUsdRate)}
-                        </td>
-
-                        <td className="py-3 px-3 text-center">
-                          <div className="inline-flex items-center gap-1 border border-slate-700 rounded-lg p-1 bg-[#0F172A]">
-                            <button
-                              onClick={() => handleStockUpdateWrapper(lap.id, -1, lap.title)}
-                              disabled={lap.stock <= 0}
-                              className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-black disabled:opacity-30"
-                              title="Decrease Stock"
+                          <td className="py-3 px-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                                lap.conditionGrade === 'A+'
+                                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-800'
+                                  : lap.conditionGrade === 'A'
+                                  ? 'bg-blue-950 text-blue-300 border border-blue-800'
+                                  : 'bg-amber-950 text-amber-300 border border-amber-800'
+                              }`}
                             >
-                              -
-                            </button>
-                            <span className="w-6 text-center font-black text-white">{lap.stock}</span>
-                            <button
-                              onClick={() => handleStockUpdateWrapper(lap.id, 1, lap.title)}
-                              className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-black"
-                              title="Increase Stock"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
+                              Grade {lap.conditionGrade}
+                            </span>
+                          </td>
 
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => {
-                                setEditingLaptop(lap);
-                                setIsAddEditModalOpen(true);
-                              }}
-                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700"
-                              title="Edit Laptop"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-1 font-black text-cyan-400">
+                              <BatteryMedium className="w-3.5 h-3.5" />
+                              <span>{lap.batteryHealth}%</span>
+                            </div>
+                          </td>
 
-                            <button
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to delete "${lap.title}"?`)) {
-                                  handleDeleteLaptopWrapper(lap.id, lap.title);
-                                }
-                              }}
-                              className="p-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-400 rounded-lg transition-colors border border-rose-800/60"
-                              title="Delete Laptop"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          {/* Public Selling Price */}
+                          <td className="py-3 px-3 font-black text-blue-400 text-sm whitespace-nowrap">
+                            {formatPrice(lap.price, currency, settings.bdtToUsdRate)}
+                          </td>
+
+                          {/* Secret Buying Cost */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5">
+                              {isRevealed ? (
+                                <span className="font-black text-amber-300 font-mono text-xs">
+                                  {formatPrice(cost, currency, settings.bdtToUsdRate)}
+                                </span>
+                              ) : (
+                                <span className="font-mono text-slate-500 font-black tracking-widest text-xs select-none">
+                                  ••••••
+                                </span>
+                              )}
+
+                              {isCounterPrivacyMode && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleRowReveal(lap.id)}
+                                  className="p-1 text-slate-400 hover:text-white rounded-md hover:bg-slate-700/60 transition-colors cursor-pointer"
+                                  title={isRevealed ? 'Hide secret price' : 'Peek secret buying price'}
+                                >
+                                  {isRevealed ? <EyeOff className="w-3 h-3 text-amber-400" /> : <Eye className="w-3 h-3 text-slate-400" />}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Secret Est. Profit */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {isRevealed ? (
+                              <div className="flex flex-col">
+                                <span className={`font-black font-mono text-xs ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                  {profit >= 0 ? '+' : ''}{formatPrice(profit, currency, settings.bdtToUsdRate)}
+                                </span>
+                                <span className="text-[10px] text-emerald-500 font-extrabold">
+                                  ({marginPct}% margin)
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="font-mono text-slate-500 font-black tracking-widest text-xs select-none">
+                                ••••••
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Stock Counter */}
+                          <td className="py-3 px-3 text-center">
+                            <div className="inline-flex items-center gap-1 border border-slate-700 rounded-lg p-1 bg-[#0F172A]">
+                              <button
+                                onClick={() => handleStockUpdateWrapper(lap.id, -1, lap.title)}
+                                disabled={lap.stock <= 0}
+                                className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-black disabled:opacity-30 cursor-pointer"
+                                title="Decrease Stock"
+                              >
+                                -
+                              </button>
+                              <span className="w-6 text-center font-black text-white">{lap.stock}</span>
+                              <button
+                                onClick={() => handleStockUpdateWrapper(lap.id, 1, lap.title)}
+                                className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-black cursor-pointer"
+                                title="Increase Stock"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingLaptop(lap);
+                                  setIsAddEditModalOpen(true);
+                                }}
+                                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 cursor-pointer"
+                                title="Edit Laptop Specs & Pricing"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Are you sure you want to delete "${lap.title}"?`)) {
+                                    handleDeleteLaptopWrapper(lap.id, lap.title);
+                                  }
+                                }}
+                                className="p-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-400 rounded-lg transition-colors border border-rose-800/60 cursor-pointer"
+                                title="Delete Laptop"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -741,6 +908,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* TAB 3: INSIGHTS & ANALYTICS */}
         {activeTab === 'analytics' && (
           <div className="p-6 space-y-6">
+            {/* Confidential Financial Intelligence Card */}
+            <div className="p-5 bg-gradient-to-br from-[#1E293B] to-[#0F172A] rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  <h4 className="font-black text-sm text-[#F8FAFC] uppercase tracking-wide">
+                    Confidential Financial & Profit Intelligence (গোপন লাভ ও মূলধন বিশ্লেষণ)
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleCounterPrivacyMode}
+                  className={`px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border ${
+                    isCounterPrivacyMode
+                      ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+                      : 'bg-amber-950/80 border-amber-700 text-amber-300'
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{isCounterPrivacyMode ? 'Privacy ON (Masked)' : 'Privacy OFF (Revealed)'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 bg-[#0F172A] rounded-xl border border-slate-800">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Total Inventory Sales Value
+                  </div>
+                  <div className="text-xl font-black text-cyan-400 font-mono">
+                    {formatPrice(totalInventoryValue, currency, settings.bdtToUsdRate)}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">If all {totalStockUnits} units sell at marked price</div>
+                </div>
+
+                <div className="p-4 bg-[#0F172A] rounded-xl border border-amber-900/40">
+                  <div className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Total Buying Capital (কেনা খরচ)</span>
+                  </div>
+                  <div className="text-xl font-black text-amber-400 font-mono">
+                    {isCounterPrivacyMode ? '••••••••' : formatPrice(totalInventoryCost, currency, settings.bdtToUsdRate)}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">Total purchasing capital invested</div>
+                </div>
+
+                <div className="p-4 bg-[#0F172A] rounded-xl border border-emerald-900/40">
+                  <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Projected Net Profit (মোট লাভ)</span>
+                  </div>
+                  <div className="text-xl font-black text-emerald-400 font-mono">
+                    {isCounterPrivacyMode ? '••••••••' : `+${formatPrice(totalPotentialProfit, currency, settings.bdtToUsdRate)}`}
+                  </div>
+                  <div className="text-[11px] text-emerald-500 font-bold mt-1">
+                    {isCounterPrivacyMode
+                      ? '🔒 Masked for customer safety'
+                      : `${Math.round((totalPotentialProfit / (totalInventoryValue || 1)) * 100)}% overall profit margin`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Brand Distribution */}
               <div className="p-5 bg-[#1E293B] rounded-2xl border border-slate-800 space-y-4">
