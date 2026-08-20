@@ -89,7 +89,9 @@ export interface ShopSettings {
   deliveryFeeOutsideDhaka: number;
   announcement: string;
   showAnnouncement: boolean;
-  adminPin: string;
+  adminEmail?: string;
+  adminPassword?: string;
+  adminPin?: string;
   currency: 'BDT' | 'USD';
   bdtToUsdRate: number; // e.g. 120 BDT = 1 USD
 }

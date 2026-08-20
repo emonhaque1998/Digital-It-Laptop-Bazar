@@ -165,14 +165,23 @@ export async function initDatabase(): Promise<boolean> {
       const current = typeof settingsRes.rows[0].settings === 'string'
         ? JSON.parse(settingsRes.rows[0].settings)
         : settingsRes.rows[0].settings;
+      let needsUpdate = false;
       if (current.phone?.includes('1711-234567') || current.whatsapp?.includes('1711234567')) {
         current.phone = '+880 1864-176956';
         current.whatsapp = '+8801864176956';
+        needsUpdate = true;
+      }
+      if (!current.adminEmail || !current.adminPassword) {
+        current.adminEmail = current.adminEmail || 'emonhaque.net@gmail.com';
+        current.adminPassword = current.adminPassword || 'Emon@1998';
+        needsUpdate = true;
+      }
+      if (needsUpdate) {
         await db.query(
           'UPDATE shop_settings SET settings = $1, updated_at = NOW() WHERE id = 1',
           [JSON.stringify(current)]
         );
-        console.log('Updated Neon shop settings contact numbers to 01864176956');
+        console.log('Updated Neon shop settings with contact numbers & admin credentials.');
       }
     }
 

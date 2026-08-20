@@ -23,7 +23,13 @@ import {
   AlertTriangle,
   BatteryMedium,
   Sparkles,
-  BarChart3
+  BarChart3,
+  Mail,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+  KeyRound,
+  LogOut
 } from 'lucide-react';
 import { Laptop, Order, OrderStatus, ShopSettings } from '../types';
 import { formatPrice } from '../utils/currency';
@@ -63,8 +69,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const [enteredPin, setEnteredPin] = useState('');
-  const [pinError, setPinError] = useState(false);
+  const [enteredEmail, setEnteredEmail] = useState('');
+  const [enteredPassword, setEnteredPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'analytics' | 'settings'>('inventory');
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,17 +84,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
 
   // Settings form state
-  const [settingsForm, setSettingsForm] = useState<ShopSettings>({ ...settings });
+  const [settingsForm, setSettingsForm] = useState<ShopSettings>({
+    ...settings,
+    adminEmail: settings.adminEmail || 'emonhaque.net@gmail.com',
+    adminPassword: settings.adminPassword || 'Emon@1998',
+  });
   const [settingsSavedMsg, setSettingsSavedMsg] = useState(false);
+  const [showSettingsPassword, setShowSettingsPassword] = useState(false);
+
+  const expectedEmail = (settings.adminEmail || 'emonhaque.net@gmail.com').trim().toLowerCase();
+  const expectedPassword = settings.adminPassword || 'Emon@1998';
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (enteredPin === settings.adminPin || enteredPin === '1234') {
-      onSetAdminLoggedIn(true);
-      setPinError(false);
-    } else {
-      setPinError(true);
+    const cleanEmail = enteredEmail.trim().toLowerCase();
+    const cleanPass = enteredPassword;
+
+    if (!cleanEmail || !cleanPass) {
+      setLoginError('অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড উভয়ই প্রদান করুন।');
+      return;
     }
+
+    if (cleanEmail === expectedEmail && cleanPass === expectedPassword) {
+      onSetAdminLoggedIn(true);
+      setLoginError(null);
+    } else {
+      setLoginError('ভুল ইমেইল বা পাসওয়ার্ড! সঠিক তথ্য দিয়ে লগইন করুন।');
+    }
+  };
+
+  const handleAutoFillDefault = () => {
+    setEnteredEmail('emonhaque.net@gmail.com');
+    setEnteredPassword('Emon@1998');
+    setLoginError(null);
   };
 
   // Analytics Metrics
@@ -119,70 +149,128 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setTimeout(() => setSettingsSavedMsg(false), 2500);
   };
 
-  // PIN Login Screen
+  // Email & Password Login Screen (Sign-Up disabled)
   if (!isAdminLoggedIn) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in zoom-in-95">
-        <div className="bg-[#0F172A] rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-800 text-center space-y-6 text-[#F8FAFC]">
-          <div className="w-16 h-16 rounded-2xl bg-[#1E293B] border border-slate-700 text-blue-400 flex items-center justify-center mx-auto shadow-md">
-            <Lock className="w-8 h-8 text-blue-400" />
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="text-xl font-black text-[#F8FAFC] uppercase tracking-wide">Admin Control Portal</h3>
-            <p className="text-xs text-slate-400 font-medium">
-              Enter admin PIN to manage used laptops inventory & customer orders.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                maxLength={8}
-                value={enteredPin}
-                onChange={(e) => {
-                  setEnteredPin(e.target.value);
-                  setPinError(false);
-                }}
-                placeholder="Enter PIN (Default: 1234)"
-                className="w-full text-center tracking-widest text-lg font-black px-4 py-3 rounded-xl border border-slate-700 bg-[#1E293B] text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                autoFocus
-              />
-              {pinError && (
-                <p className="text-xs font-bold text-rose-400 mt-1.5">
-                  Invalid PIN! Please try default &ldquo;1234&rdquo;.
-                </p>
-              )}
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in zoom-in-95">
+        <div className="bg-[#0F172A] rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-800 text-left space-y-6 text-[#F8FAFC]">
+          
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 rounded-2xl bg-blue-950/80 border border-blue-600/40 text-blue-400 flex items-center justify-center mx-auto shadow-lg shadow-blue-950/50">
+              <KeyRound className="w-8 h-8 text-blue-400" />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-[#F8FAFC] uppercase tracking-wide">
+                Admin Control Portal
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">
+                Sign in with authorized administrator credentials.
+              </p>
+            </div>
+
+            {/* Strict Sign-up Disabled Notice */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full text-[11px] font-bold text-slate-400">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              <span>Public Registration / Sign Up is Disabled</span>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email Field */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-300">
+                Admin Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <input
+                  type="email"
+                  value={enteredEmail}
+                  onChange={(e) => {
+                    setEnteredEmail(e.target.value);
+                    setLoginError(null);
+                  }}
+                  placeholder="emonhaque.net@gmail.com"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 bg-[#1E293B] text-white text-xs sm:text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-500"
+                  autoFocus
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-300">
+                Admin Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={enteredPassword}
+                  onChange={(e) => {
+                    setEnteredPassword(e.target.value);
+                    setLoginError(null);
+                  }}
+                  placeholder="Enter admin password"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-700 bg-[#1E293B] text-white text-xs sm:text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-500"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {loginError && (
+              <div className="p-3 bg-rose-950/80 border border-rose-800 text-rose-300 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div className="space-y-2.5 pt-1">
               <button
                 type="submit"
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm uppercase tracking-wide rounded-xl shadow-xl shadow-blue-950/50 transition-colors cursor-pointer"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm uppercase tracking-wide rounded-xl shadow-xl shadow-blue-950/50 transition-colors cursor-pointer flex items-center justify-center gap-2"
               >
-                Unlock Dashboard
+                <Unlock className="w-4 h-4" />
+                <span>Sign In to Admin Panel</span>
               </button>
 
+              {/* Quick Fill Button */}
               <button
                 type="button"
-                onClick={() => {
-                  setEnteredPin('1234');
-                  onSetAdminLoggedIn(true);
-                }}
-                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wide rounded-xl transition-colors border border-slate-700"
+                onClick={handleAutoFillDefault}
+                className="w-full py-2 px-3 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wide rounded-xl transition-colors border border-slate-700/80 flex items-center justify-center gap-2"
               >
-                ⚡ Quick Demo Login (Use PIN 1234)
+                <span>⚡ Auto-Fill Default Credentials</span>
               </button>
             </div>
           </form>
 
-          <button
-            onClick={onClose}
-            className="text-xs text-slate-400 hover:text-white font-bold uppercase tracking-wide"
-          >
-            Back to Customer Store
-          </button>
+          {/* Footer Note */}
+          <div className="text-center pt-2 border-t border-slate-800/80">
+            <button
+              onClick={onClose}
+              className="text-xs text-slate-400 hover:text-white font-bold uppercase tracking-wide transition-colors"
+            >
+              ← Back to Customer Storefront
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -226,10 +314,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             <button
               onClick={() => onSetAdminLoggedIn(false)}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
-              title="Lock Admin"
+              className="px-3 py-2 bg-slate-800 hover:bg-rose-950/70 border border-slate-700 hover:border-rose-700 text-slate-300 hover:text-rose-300 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Log Out Admin Portal"
             >
-              <Lock className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Log Out</span>
             </button>
 
             <button
@@ -796,14 +885,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">Change Admin PIN</label>
-                <input
-                  type="text"
-                  value={settingsForm.adminPin}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, adminPin: e.target.value })}
-                  className="w-40 px-3.5 py-2 rounded-xl border border-slate-700 bg-[#0F172A] text-white text-xs font-bold text-center"
-                />
+              <div className="pt-2 border-t border-slate-800 space-y-3">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-blue-400" />
+                  <h5 className="text-xs font-black uppercase tracking-wider text-slate-200">
+                    Admin Login Credentials (এডমিন ইমেইল ও পাসওয়ার্ড)
+                  </h5>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                      Admin Email
+                    </label>
+                    <input
+                      type="email"
+                      value={settingsForm.adminEmail || 'emonhaque.net@gmail.com'}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, adminEmail: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-[#0F172A] text-white text-xs font-medium"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                      Admin Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showSettingsPassword ? 'text' : 'password'}
+                        value={settingsForm.adminPassword || 'Emon@1998'}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, adminPassword: e.target.value })}
+                        className="w-full pl-3.5 pr-10 py-2 rounded-xl border border-slate-700 bg-[#0F172A] text-white text-xs font-medium"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSettingsPassword(!showSettingsPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition-colors"
+                      >
+                        {showSettingsPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2">

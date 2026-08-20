@@ -67,6 +67,12 @@ export function getStoredSettings(): ShopSettings {
         if (!parsed.whatsapp || parsed.whatsapp.includes('1711234567')) {
           parsed.whatsapp = '+8801864176956';
         }
+        if (!parsed.adminEmail) {
+          parsed.adminEmail = 'emonhaque.net@gmail.com';
+        }
+        if (!parsed.adminPassword) {
+          parsed.adminPassword = 'Emon@1998';
+        }
         saveStoredSettings(parsed);
         return parsed;
       }

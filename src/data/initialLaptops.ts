@@ -13,6 +13,8 @@ export const INITIAL_SHOP_SETTINGS: ShopSettings = {
   deliveryFeeOutsideDhaka: 250,
   announcement: '🔥 Eid Special Mega Discount! Get 15 Days Replacement Guarantee + Free Original Laptop Bag & Mouse with every used laptop!',
   showAnnouncement: true,
+  adminEmail: 'emonhaque.net@gmail.com',
+  adminPassword: 'Emon@1998',
   adminPin: '1234',
   currency: 'BDT',
   bdtToUsdRate: 120,
